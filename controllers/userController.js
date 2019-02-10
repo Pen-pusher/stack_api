@@ -30,6 +30,7 @@ module.exports = {
 		req.session.destroy();
 	},
 	userInfo: (req, res) => {
-		res.status(200).json(req.user);
+		var user = req.user;
+		res.status(200).json({id: user.id, name: user.name, email: user.email});
 	}
 }
