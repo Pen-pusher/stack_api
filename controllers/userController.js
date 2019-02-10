@@ -28,5 +28,8 @@ module.exports = {
 	logoutUser: (req, res) => {
 		res.status(200).json({success: `${req.user.email} logged out successfully`})
 		req.session.destroy();
+	},
+	userInfo: (req, res) => {
+		res.status(200).json(req.user);
 	}
 }

@@ -12,6 +12,7 @@ router.get('/', authController.isTokenValid, (req, res) => {
 router.post('/register', userController.registerUser);
 router.post('/login', userController.loginUser);
 router.get('/logout', authController.isUser, userController.logoutUser);
+router.get('/me', authController.isTokenValid, userController.userInfo);
 
 
 
