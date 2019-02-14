@@ -11,7 +11,6 @@ module.exports = {
 		User.create(req.body, (err, user) => {
 			if(err) return res.status(500).json(err);
 			res.status(200).json({success: `${user.email} created successfully`})
-			// res.status(200).json({user: user});
 		});
 	},
 	loginUser: (req, res) => {

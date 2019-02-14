@@ -3,29 +3,30 @@ const crypto = require('crypto');
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
-	name: {
-		type: String,
-		required: true,
-		trim: true
-	},
-	email: {
-		type: String,
-		unique: true,
-		lowercase: true,
-		trim: true,
-		required: true
-	},
+	name: { type: String, required: true, trim: true },
+	email: { type: String, unique: true, lowercase: true, trim: true, required: true },
+	age: Number,
 	salt: String,
-	password: String
+	password: String,
+	description: String,
+	address: {
+		street: String,
+		city: String,
+		state: String,
+		pincode: {type: String, minLength: 5, maxLength: 6}
+	},
+	githubUrl: String,
+	twitterUrl: String,
+	personalWebsiteUrl: String,
+	repulationScore: {type: Number, default: 0},
+	photo: String
 }, {timestamps: true});
 
 
 userSchema.pre('save', function(next) {
-	// console.log('Inside pre')
 	if(this.password) {
-		// console.log('inside password')
 		this.salt = crypto.randomBytes(16).toString('hex');
-  		this.password = crypto.pbkdf2Sync(this.password, this.salt, 10000, 64, 'sha512').toString('hex');
+  	this.password = crypto.pbkdf2Sync(this.password, this.salt, 10000, 64, 'sha512').toString('hex');
 	}
 	next();
 });
