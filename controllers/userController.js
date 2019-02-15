@@ -21,7 +21,7 @@ module.exports = {
 				if(!user.validatePassword(password)) return res.status(400).json({error: 'Invalid password'});
 				req.session.userId = user.id;
 				var token = jwt.sign({id: user.id}, process.env.SECRET)
-				res.json({email: user.email, token: token})
+				res.status(200).json({email: user.email, token: token})
 		});
 	},
 	logoutUser: (req, res) => {
@@ -32,4 +32,4 @@ module.exports = {
 		var user = req.user;
 		res.status(200).json({id: user.id, name: user.name, email: user.email});
 	}
-}
+};
