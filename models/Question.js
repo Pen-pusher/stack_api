@@ -7,7 +7,8 @@ var questionSchema = new Schema({
   upvote: { type: Number, default: 0 },
   stars: { type: Number, default: 0 },
   viewCount: { type: Number, default: 0 },
-  authorId: { type: Schema.Types.ObjectId, required: true, ref: 'User' }
+  authorId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
+  answers: [ { type: Schema.Types.ObjectId, ref: 'Answer' } ]
 }, {timestamps: true});
 
 module.exports = mongoose.model('Question', questionSchema);
