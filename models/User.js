@@ -5,6 +5,7 @@ const Schema = mongoose.Schema;
 const userSchema = new Schema({
 	name: { type: String, required: true, trim: true },
 	email: { type: String, unique: true, lowercase: true, trim: true, required: true },
+	username: {type: String, unique: true, lowercase: true, trim: true, required: true},
 	age: Number,
 	salt: String,
 	password: String,
@@ -35,9 +36,5 @@ userSchema.methods.validatePassword = function(password) {
   const hash = crypto.pbkdf2Sync(password, this.salt, 10000, 64, 'sha512').toString('hex');
   return this.password === hash;
 };
-
-
-
-
 
 module.exports = mongoose.model('User', userSchema);

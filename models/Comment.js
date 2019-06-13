@@ -8,3 +8,5 @@ var commentSchema = new Schema({
   authorId: { type: Schema.Types.ObjectId, required: true, ref: 'User'},
   upvote: { type: Number, default: 0 }
 }, { timestamps: true } );
+
+module.exports = mongoose.model('Comment', commentSchema);

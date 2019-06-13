@@ -1,38 +1,104 @@
 var mongoose = require('mongoose');
 var Question = mongoose.model('Question');
+var Tag = mongoose.model('Tag');
+var QuestionTag = mongoose.model('QuestionTag');
 
 module.exports = {
+  // List Questions
   listQuestions: (req, res) => {
-    Question.find().sort({insertedAt: 1}).exec((err, questions) => {
-      if(err) return res.status(500).json({error: err});
-      res.status(200).json({questions: questions});
-    })
+    Question.find().sort({insertedAt: 1}).populate('authorId').exec()
+      .then(questions => res.status(200).json({questions: questions}))
+      .catch(err => res.status(500).json(err));
   }, 
+
+  // Create Question
   createQuestion: (req, res) => {
     req.body.authorId = req.user.id;
-    Question.create(req.body, (err, question) => {
-      if(err) return res.status(500).json({error: err});
-      res.status(200).json({question: question});
-    });
+    Question.create(req.body)
+      .then(question => {
+        if (req.body.tags && req.body.tags.length > 0) {
+          req.body.tags.forEach(tagName => {
+            Tag.findOneAndUpdate({name: tagName}, {}, {upsert: true, new: true}).exec()
+              .then(tag => QuestionTag.create({
+                tag: tag._id, question: question._id
+              }))
+          });
+        }
+        res.status(200).json({ question: question });
+      })
+      .catch(err => res.status(500).json(err))
+      
   },
+
+  //Show Question with answers and Comments
   showQuestion: (req, res) => {
     Question
     .findById(req.params.id)
     .populate({
       path: 'authorId', 
-      select: {salt: 0, password: 0}
+      select: {name: 1, updatedAt: 1}
     })
     .populate({
       path: 'answers',
       select: {questionId: 0},
-      populate:{
+      populate:[{
         path: 'authorId',
         select: {salt: 0, password: 0}
+      },
+      {
+        path: 'comments',
+        select: {description: 1, upvote: 1},
+        populate:{
+          path: 'authorId',
+          select: {name: 1, updatedAt: 1}
+        }
+      }]
+    })
+    .populate({
+      path: 'comments',
+      select: {questionId: 0},
+      populate:{
+        path: 'authorId',
+        select: {name: 1, updatedAt: 1}
       }
     })
     .exec((err, question) => {
       if(err) return res.status(500).json({error: err});
-      res.status(200).json({question: question});
+      QuestionTag
+        .find({question: question._id})
+        .populate({path: 'tag', select: {name: 1}})
+        .exec((err, tags) => {
+          console.log(tags);
+          res.status(200).json({ question: question, tags: tags});
+      });
+    });
+  },
+
+  // Upvote Question
+  upvoteQuestion: (req, res) => {
+    Question.findByIdAndUpdate(req.params.id, {$inc: {upvote: 1}}, {new: true})
+    .then(question => {
+      res.redirect(`/api/v1/questions/${question.id}`)
     })
+    .catch(error => res.status(500).json(err));
+  },
+
+  // Downvote question
+  downvoteQuestion: (req, res) => {
+    Question.findByIdAndUpdate(req.params.id, {$inc: {upvote: -1}}, {new: true})
+    .then(question => {
+      res.redirect(`/api/v1/questions/${question.id}`)
+    })
+    .catch(error => res.status(500).json(err));  
+  },
+
+  // Star question
+  starQuestion: (req, res) => {
+    var id = req.params.id;
+    Question.findByIdAndUpdate(id, {$inc: {stars: 1}})
+    .then(question => {
+      res.redirect(`/api/v1/questions/${id}`)
+    })
+    .catch(error => res.status(500).json(err));
   }
 };

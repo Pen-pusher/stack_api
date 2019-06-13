@@ -8,9 +8,8 @@ var tagSchema = new Schema({
 }, { timestamps: true } );
 
 tagSchema.pre('save', function(next) {
-  if(this.name && this.isModified(this.name)) {
+  if(this.name && this.isModified('name')) {
     this.slug = this.name.trim().split(" ").join("-");
-    next();
   }
   next();
 });
