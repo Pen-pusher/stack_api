@@ -8,7 +8,8 @@ var questionSchema = new Schema({
   stars: { type: Number, default: 0 },
   viewCount: { type: Number, default: 0 },
   authorId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
-  answers: [ { type: Schema.Types.ObjectId, ref: 'Answer' } ]
+  answers: [ { type: Schema.Types.ObjectId, ref: 'Answer' } ],
+  comments: [{type: Schema.Types.ObjectId, ref: 'Comment'}]
 }, {timestamps: true});
 
 module.exports = mongoose.model('Question', questionSchema);
