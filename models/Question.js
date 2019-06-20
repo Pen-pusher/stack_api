@@ -12,4 +12,8 @@ var questionSchema = new Schema({
   comments: [{type: Schema.Types.ObjectId, ref: 'Comment'}]
 }, {timestamps: true});
 
+questionSchema.pre('update', function() {
+  console.log('before post', this);
+})
+
 module.exports = mongoose.model('Question', questionSchema);

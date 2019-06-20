@@ -1,6 +1,8 @@
 const mongoose = require('mongoose'); 
 const crypto = require('crypto');
 const Schema = mongoose.Schema;
+const Question = require('./Question');
+const Answer = require('./Answer');
 
 const userSchema = new Schema({
 	name: { type: String, required: true, trim: true },
@@ -19,13 +21,18 @@ const userSchema = new Schema({
 	githubUrl: String,
 	twitterUrl: String,
 	personalWebsiteUrl: String,
-	repulationScore: {type: Number, default: 0},
-	photo: String
+	reputationScore: {type: Number, default: 0},
+	photo: String,
+	quv: [{type: Schema.Types.ObjectId, ref: 'Question'}],
+	qdv: [{type: Schema.Types.ObjectId, ref: 'Question'}],
+	auv: [{type: Schema.Types.ObjectId, ref: 'Answer'}],
+	adv: [{type: Schema.Types.ObjectId, ref: 'Answer'}],
+	starQ: [{type: Schema.Types.ObjectId, ref: 'Question'}]
 }, {timestamps: true});
 
 
 userSchema.pre('save', function(next) {
-	if(this.password) {
+	if(this.password && this.isModified('password')) {
 		this.salt = crypto.randomBytes(16).toString('hex');
   	this.password = crypto.pbkdf2Sync(this.password, this.salt, 10000, 64, 'sha512').toString('hex');
 	}

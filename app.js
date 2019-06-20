@@ -29,12 +29,6 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(session({ 
-	secret: 'jhdsgfksdfhdsjfhdkshfkjdsfmbds', 
-	resave: true, 
-	saveUninitialized: true,
-	store: new MongoStore({ mongooseConnection: mongoose.connection })
-}));
 
 app.use('/api/v1', apiRouter);
 

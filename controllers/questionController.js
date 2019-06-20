@@ -32,15 +32,17 @@ module.exports = {
 
   //Show Question with answers and Comments
   showQuestion: (req, res) => {
+    console.log(req.query);
     Question
     .findById(req.params.id)
     .populate({
       path: 'authorId', 
-      select: {name: 1, updatedAt: 1}
+      select: {name: 1, username: 1, reputationScore: 1, updatedAt: 1}
     })
     .populate({
       path: 'answers',
       select: {questionId: 0},
+      options: {sort: req.query},
       populate:[{
         path: 'authorId',
         select: {salt: 0, password: 0}
@@ -68,7 +70,6 @@ module.exports = {
         .find({question: question._id})
         .populate({path: 'tag', select: {name: 1}})
         .exec((err, tags) => {
-          console.log(tags);
           res.status(200).json({ question: question, tags: tags});
       });
     });
@@ -76,8 +77,14 @@ module.exports = {
 
   // Upvote Question
   upvoteQuestion: (req, res) => {
-    Question.findByIdAndUpdate(req.params.id, {$inc: {upvote: 1}}, {new: true})
+    var id = req.params.id;
+    if(req.user.quv.indexOf(id) > -1) {
+      return res.status(301).json({error: {message: 'already upvoted'}})
+    }
+    Question.findByIdAndUpdate(id, {$inc: {upvote: 1}})
     .then(question => {
+      req.user.quv.push(id);
+      req.user.save();
       res.redirect(`/api/v1/questions/${question.id}`)
     })
     .catch(error => res.status(500).json(err));
@@ -85,8 +92,14 @@ module.exports = {
 
   // Downvote question
   downvoteQuestion: (req, res) => {
-    Question.findByIdAndUpdate(req.params.id, {$inc: {upvote: -1}}, {new: true})
+    var id = req.params.id;
+    if(req.user.qdv.indexOf(id) > -1) {
+      return res.status(301).json({error: {message: 'already downvoted'}})
+    }
+    Question.findByIdAndUpdate(id, {$inc: {upvote: -1}}, {new: true})
     .then(question => {
+      req.user.qdv.push(id);
+      req.user.save();
       res.redirect(`/api/v1/questions/${question.id}`)
     })
     .catch(error => res.status(500).json(err));  
@@ -95,8 +108,13 @@ module.exports = {
   // Star question
   starQuestion: (req, res) => {
     var id = req.params.id;
+    if(req.user.starQ.indexOf(id) > -1) {
+      return res.json({error: {message: 'already starred'}})
+    }
     Question.findByIdAndUpdate(id, {$inc: {stars: 1}})
     .then(question => {
+      req.user.starQ.push(id);
+      req.user.save();
       res.redirect(`/api/v1/questions/${id}`)
     })
     .catch(error => res.status(500).json(err));

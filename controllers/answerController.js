@@ -25,7 +25,7 @@ module.exports = {
       if(err) return res.status(500).json(err);
       Question.findByIdAndUpdate(req.params.id, {$push: {answers: answer.id}}, (err, question) => {
         if(err) return res.status(500).json(err);
-        res.status(200).json(answer);      
+        res.redirect(`/api/v1/questions/${question.id}`)
       })
     });
   },
@@ -34,8 +34,13 @@ module.exports = {
   upvoteAnswer: (req, res) => {
     const ansId = req.params.id;
     const qId = req.params.qid;
+    if(req.user.auv.indexOf(ansId) > -1) {
+      return res.json({error: {message: 'already upvoted answer'}})
+    }
     Answer.findByIdAndUpdate(ansId, {$inc: {upvote: 1}})
     .then(answer => {
+      req.user.auv.push(ansId);
+      req.user.save();
       res.redirect(`/api/v1/questions/${qId}`);
     })
   },
@@ -44,9 +49,32 @@ module.exports = {
   downvoteAnswer: (req, res) => {
     const ansId = req.params.id;
     const qId = req.params.qid;
+    if(req.user.adv.indexOf(ansId) > -1) {
+      return res.json({error: {message: 'already downvoted answer'}})
+    }
     Answer.findByIdAndUpdate(ansId, {$inc: {upvote: -1}})
     .then(answer => {
+      req.user.adv.push(ansId);
+      req.user.save();
       res.redirect(`/api/v1/questions/${qId}`);
     })
   },
+
+  verifyAnswer: (req, res) => {
+    const ansId = req.params.id;
+    const qId = req.params.qid;
+    Question.findById(qId)
+    .then(question => {
+      console.log(question.authorId, req.user.id);
+      if (question.authorId.equals(req.user.id)) {
+        Answer.findByIdAndUpdate(ansId, {verified: true})
+        .then(answer => {
+          return;
+        })
+        return res.redirect(`/api/v1/questions/${qId}`);
+      }
+      return res.status(403).json({error: {message: 'Unauthorized'}});
+    })
+    .catch(err => res.status(500).json(err))
+  }
 };

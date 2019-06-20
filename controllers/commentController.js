@@ -13,7 +13,7 @@ module.exports = {
       .findByIdAndUpdate(req.params.id, {$push: {comments: comment.id}})
       .exec((err, question) => {
         if(err) return res.status(500).json(err);
-        res.status(200).json(comment);
+        res.redirect(`/api/v1/questions/${question.id}`)
       });
     });
   },
@@ -21,6 +21,7 @@ module.exports = {
     req.body.answerId = req.params.id;
     req.body.authorId = req.user.id;
     Comment.create(req.body, (err, comment) => {
+      console.log(err, comment);
       if (err) return res.status(500).json(err);
       Answer
         .findByIdAndUpdate(req.params.id, {
@@ -30,7 +31,7 @@ module.exports = {
         })
         .exec((err, answer) => {
           if (err) return res.status(500).json(err);
-          res.status(200).json(comment);
+          res.redirect(`/api/v1/questions/${answer.questionId}`)
         });
     });
   }
