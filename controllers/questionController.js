@@ -2,14 +2,19 @@ var mongoose = require('mongoose');
 var Question = mongoose.model('Question');
 var Tag = mongoose.model('Tag');
 var QuestionTag = mongoose.model('QuestionTag');
+var User = mongoose.model('User');
+
+var addTags = (questions) => {
+  return questions.map(q => q.tags = "react");
+}
 
 module.exports = {
   // List Questions
   listQuestions: (req, res) => {
-    Question.find().sort({insertedAt: 1}).populate('authorId').exec()
+    Question.find().sort({insertedAt: 1}).populate('authorId').populate('tags').exec()
       .then(questions => res.status(200).json({questions: questions}))
       .catch(err => res.status(500).json(err));
-  }, 
+  },
 
   // Create Question
   createQuestion: (req, res) => {
@@ -19,9 +24,9 @@ module.exports = {
         if (req.body.tags && req.body.tags.length > 0) {
           req.body.tags.forEach(tagName => {
             Tag.findOneAndUpdate({name: tagName}, {}, {upsert: true, new: true}).exec()
-              .then(tag => QuestionTag.create({
-                tag: tag._id, question: question._id
-              }))
+              .then(tag => {
+                QuestionTag.create({tag: tag._id, question: question._id})
+              })
           });
         }
         res.status(200).json({ question: question });
@@ -32,7 +37,6 @@ module.exports = {
 
   //Show Question with answers and Comments
   showQuestion: (req, res) => {
-    console.log(req.query);
     Question
     .findById(req.params.id)
     .populate({
@@ -83,11 +87,11 @@ module.exports = {
     }
     Question.findByIdAndUpdate(id, {$inc: {upvote: 1}})
     .then(question => {
-      req.user.quv.push(id);
-      req.user.save();
-      res.redirect(`/api/v1/questions/${question.id}`)
+      req.user.updateQuestionVotes(question.id, 1);
+      User.findByIdAndUpdate(question.authorId, {$inc: {reputationScore: 1}}, (err, user) => {});
+      res.redirect(`/api/v1/questions/${question.id}`);
     })
-    .catch(error => res.status(500).json(err));
+    .catch(error => res.status(500).json(error));
   },
 
   // Downvote question
@@ -96,10 +100,10 @@ module.exports = {
     if(req.user.qdv.indexOf(id) > -1) {
       return res.status(301).json({error: {message: 'already downvoted'}})
     }
-    Question.findByIdAndUpdate(id, {$inc: {upvote: -1}}, {new: true})
+    Question.findByIdAndUpdate(id, {$inc: {upvote: -1}})
     .then(question => {
-      req.user.qdv.push(id);
-      req.user.save();
+      req.user.updateQuestionVotes(question.id, -1);
+      User.findByIdAndUpdate(question.authorId, {$inc: {reputationScore: -1}}, (err, user) => {});
       res.redirect(`/api/v1/questions/${question.id}`)
     })
     .catch(error => res.status(500).json(err));  

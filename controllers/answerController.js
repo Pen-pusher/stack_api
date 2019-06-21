@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var Answer = mongoose.model('Answer');
 var Question = mongoose.model('Question');
+var User = mongoose.model('User');
 
 module.exports = {
 
@@ -39,8 +40,8 @@ module.exports = {
     }
     Answer.findByIdAndUpdate(ansId, {$inc: {upvote: 1}})
     .then(answer => {
-      req.user.auv.push(ansId);
-      req.user.save();
+      req.user.updateAnswerVotes(answer.id, 1);
+      User.findByIdAndUpdate(answer.authorId, {$inc: {reputationScore: 1}}, (err, user) => {});
       res.redirect(`/api/v1/questions/${qId}`);
     })
   },
@@ -54,8 +55,8 @@ module.exports = {
     }
     Answer.findByIdAndUpdate(ansId, {$inc: {upvote: -1}})
     .then(answer => {
-      req.user.adv.push(ansId);
-      req.user.save();
+      req.user.updateAnswerVotes(answer.id, -1);
+      User.findByIdAndUpdate(answer.authorId, {$inc: {reputationScore: -1}}, (err, user) => {});
       res.redirect(`/api/v1/questions/${qId}`);
     })
   },

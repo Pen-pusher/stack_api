@@ -44,4 +44,14 @@ userSchema.methods.validatePassword = function(password) {
   return this.password === hash;
 };
 
+userSchema.methods.updateQuestionVotes = function(id, vote) {
+	vote > 0 ? this.quv.push(id) : this.qdv.push(id);
+	this.save();
+}
+
+userSchema.methods.updateAnswerVotes = function (id, vote) {
+	vote > 0 ? this.auv.push(id) : this.adv.push(id);
+	this.save();
+}
+
 module.exports = mongoose.model('User', userSchema);
